@@ -1,7 +1,7 @@
 from enum import Enum
-
 from fastapi import FastAPI
 from pydantic import BaseModel
+from service.main import app
 
 
 class TransType(Enum):
@@ -14,3 +14,4 @@ class Transaction(BaseModel):
     Amount: float
     Group: str
     Type: TransType
+

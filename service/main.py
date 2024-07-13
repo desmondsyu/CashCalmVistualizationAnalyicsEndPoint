@@ -1,10 +1,13 @@
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse,JSONResponse
+from typing import Annotated
+import service.Security as Security
+from fastapi import FastAPI, Depends
+from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import service.Class as Class
 import matplotlib.pyplot as plt
 import io
 import service.Connector as Connector
+import base64
 
 app = FastAPI()
 security = HTTPBasic()
@@ -15,13 +18,20 @@ async def root():
     return {"message": "Hello World"}
 
 
+@app.get("/users/me")
+def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+    return {"username": credentials.username, "password": credentials.password}
+
+
 @app.get("/hello/{name}")
-async def say_hello(name: str):
+async def say_hello(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
+                    name:str ):
+    Security.get_current_username(credentials)
     return {"message": f"Hello {name}"}
 
 
 @app.get("/graph")
-async def get_graph():
+async def get_graph(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
     # Generate the graph
     fig, ax = plt.subplots()
     ax.plot([1, 2, 3], [4, 5, 6])

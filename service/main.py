@@ -1,16 +1,15 @@
+import io
 from typing import Annotated
-import service.Security as Security
+
+import matplotlib.pyplot as plt
 from fastapi import FastAPI, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-import service.Class as Class
-import matplotlib.pyplot as plt
-import io
-import service.Connector as Connector
-import base64
+from fastapi.security import HTTPBasicCredentials
 
-app = FastAPI()
-security = HTTPBasic()
+import service.Connector as Connector
+from service.auth import get_current_username,security
+
+app = FastAPI(dependencies=[Depends(get_current_username())])
 
 
 @app.get("/")
@@ -19,19 +18,12 @@ async def root():
 
 
 @app.get("/users/me")
-def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+def read_current_user(credentials: HTTPBasicCredentials = Depends(security)):
     return {"username": credentials.username, "password": credentials.password}
 
 
-@app.get("/hello/{name}")
-async def say_hello(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
-                    name:str ):
-    Security.get_current_username(credentials)
-    return {"message": f"Hello {name}"}
-
-
 @app.get("/graph")
-async def get_graph(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+async def get_graph():
     # Generate the graph
     fig, ax = plt.subplots()
     ax.plot([1, 2, 3], [4, 5, 6])
@@ -55,7 +47,7 @@ async def get_graph2():
 
 
 @app.post("/checkTransection")
-async def check_user(user_id: int):
+async def check_user():
     qurrey = f"SELECT * FROM TRANSECTION WHERE USER_ID = {user_id}"
     connector = Connector.Connector()
 

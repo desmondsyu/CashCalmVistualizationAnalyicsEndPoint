@@ -6,6 +6,7 @@ Accept: application/json
 ###
 
 GET http://127.0.0.1:8000/hello/User
+Authentication-Info: username: "123", password: "456"
 Accept: application/json
 
 ###

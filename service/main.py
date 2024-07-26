@@ -1,13 +1,14 @@
 from typing import Annotated
 import service.Security as Security
 from fastapi import FastAPI, Depends
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import service.Class as Class
 import matplotlib.pyplot as plt
 import io
 import service.Connector as Connector
 import base64
+import datetime
 
 app = FastAPI()
 security = HTTPBasic()
@@ -23,33 +24,48 @@ def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(secur
     return {"username": credentials.username, "password": credentials.password}
 
 
-@app.get("/hello/{name}")
+@app.get("/user_message")
 async def say_hello(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
                     name:str ):
-    Security.get_current_username(credentials)
-    return {"message": f"Hello {name}"}
+    user_data = read_current_user(credentials)
+    name = user_data["name"]
+    date = datetime.date.today()
+
+    return {"username": f"{name}",
+            "date": f"{date}",
+            "message": f"Hello {name}, you spending data to {date}"}
+
+@app.get("/get_spending_analyst")
+async def get_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+    user_data = read_current_user(credentials)
+    uname = user_data["username"]
+    query = f"SELECT * FROM spend_data WHERE username = '{uname}'"
+
+    connection = Connector.Connector()
+    try :
+        result = connection.execute(query)
+        if result.rowcount == 0:
+            return {"message": "No data found"}
+    except Exception as e:
+        return {"error message": str(e)}
+    current_datetime = datetime.datetime.now()
+    last_month = current_datetime - datetime.timedelta(days=30)
+    query_current_spending = (f"SELECT SUM(AMOUNT) FROM spend_data WHERE username = '{uname}'"
+                              f"AND TRAN_DATE > '{last_month}' and "
+                              f"TRAN_DATE < '{current_datetime}'"
+                              f"and TYPE is 'EX'")
+    current_spending = connection.execute(query_current_spending)
+    average_spending = current_spending.fetchone()[0]
+    difference_spending = current_spending-average_spending
 
 
-@app.get("/graph")
-async def get_graph(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    # Generate the graph
-    fig, ax = plt.subplots()
-    ax.plot([1, 2, 3], [4, 5, 6])
 
-    # Save the graph to a BytesIO object
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-
-    return StreamingResponse(buf, media_type="image/png")
-
-
-@app.get("/graph2")
-async def get_graph2():
-    # Example data for the graph
     data = {
-        "x": [1, 2, 3],
-        "y": [4, 5, 6]
+        "current_montly_spend": f"{current_spending.fetchone()[0]}",
+        "Average_Spending":f"{average_spending}",
+        "Different_from_Average":f"{difference_spending}",
+        "Upper_limit":f"{}",
+        "Today Date":f"{datetime.date.today()}"
     }
     return JSONResponse(content=data)
 

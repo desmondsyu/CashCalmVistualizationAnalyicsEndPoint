@@ -1,12 +1,13 @@
-from typing import Annotated
-import service.Security as Security
-from fastapi import FastAPI, Depends
-from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-import service.Class as Class
-import matplotlib.pyplot as plt
 import io
+from typing import Annotated
+
+import matplotlib.pyplot as plt
+from fastapi import FastAPI, Depends
+from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.security import HTTPBasicCredentials
+
 import service.Connector as Connector
+from service.auth import get_current_username,security
 import base64
 import datetime
 
@@ -24,6 +25,11 @@ def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(secur
     return {"username": credentials.username, "password": credentials.password}
 
 
+@app.get("/graph")
+async def get_graph():
+    # Generate the graph
+    fig, ax = plt.subplots()
+    ax.plot([1, 2, 3], [4, 5, 6])
 @app.get("/user_message")
 async def say_hello(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
                     name:str ):
@@ -58,20 +64,21 @@ async def get_data(credentials: Annotated[HTTPBasicCredentials, Depends(security
     average_spending = current_spending.fetchone()[0]
     difference_spending = current_spending-average_spending
 
+    return StreamingResponse(buf, media_type="image/png")
 
 
+@app.get("/graph2")
+async def get_graph2():
+    # Example data for the graph
     data = {
-        "current_montly_spend": f"{current_spending.fetchone()[0]}",
-        "Average_Spending":f"{average_spending}",
-        "Different_from_Average":f"{difference_spending}",
-        "Upper_limit":f"{}",
-        "Today Date":f"{datetime.date.today()}"
+        "x": [1, 2, 3],
+        "y": [4, 5, 6]
     }
     return JSONResponse(content=data)
 
 
 @app.post("/checkTransection")
-async def check_user(user_id: int):
+async def check_user():
     qurrey = f"SELECT * FROM TRANSECTION WHERE USER_ID = {user_id}"
     connector = Connector.Connector()
 

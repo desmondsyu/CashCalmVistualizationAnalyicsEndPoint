@@ -2,12 +2,6 @@ import mysql.connector
 import json
 from fastapi import HTTPException, status
 
-
-
-
-
-
-
 class Connector:
     def __init__(self):
         with open('config.json') as config_file:

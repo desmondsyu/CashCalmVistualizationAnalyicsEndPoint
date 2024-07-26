@@ -4,7 +4,7 @@ from typing import Annotated
 import matplotlib.pyplot as plt
 from fastapi import FastAPI, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
-from fastapi.security import HTTPBasicCredentials
+from fastapi.security import HTTPBasicCredentials, HTTPBasic
 
 import service.Connector as Connector
 from service.auth import get_current_username,security
@@ -12,7 +12,6 @@ import base64
 import datetime
 
 app = FastAPI()
-security = HTTPBasic()
 
 
 @app.get("/")

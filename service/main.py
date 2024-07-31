@@ -7,11 +7,13 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.security import HTTPBasicCredentials, HTTPBasic
 
 import service.Connector as Connector
-from service.auth import get_current_username,security
+import service.auth
+from service.auth import auth_username, security, auth_get_use_id
+from service.ModelbaseOnEachUser import load_user_prediction, load_monthly_sepnding
 import base64
 import datetime
 
-app = FastAPI()
+app = FastAPI(dependencies=[Depends(auth_username)])
 
 
 @app.get("/")
@@ -24,62 +26,32 @@ def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(secur
     return {"username": credentials.username, "password": credentials.password}
 
 
-@app.get("/graph")
-async def get_graph():
-    # Generate the graph
-    fig, ax = plt.subplots()
-    ax.plot([1, 2, 3], [4, 5, 6])
-@app.get("/user_message")
-async def say_hello(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
-                    name:str ):
-    user_data = read_current_user(credentials)
-    name = user_data["name"]
-    date = datetime.date.today()
-
-    return {"username": f"{name}",
-            "date": f"{date}",
-            "message": f"Hello {name}, you spending data to {date}"}
-
-@app.get("/get_spending_analyst")
-async def get_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    user_data = read_current_user(credentials)
-    uname = user_data["username"]
-    query = f"SELECT * FROM spend_data WHERE username = '{uname}'"
-
-    connection = Connector.Connector()
-    try :
-        result = connection.execute(query)
-        if result.rowcount == 0:
-            return {"message": "No data found"}
-    except Exception as e:
-        return {"error message": str(e)}
-    current_datetime = datetime.datetime.now()
-    last_month = current_datetime - datetime.timedelta(days=30)
-    query_current_spending = (f"SELECT SUM(AMOUNT) FROM spend_data WHERE username = '{uname}'"
-                              f"AND TRAN_DATE > '{last_month}' and "
-                              f"TRAN_DATE < '{current_datetime}'"
-                              f"and TYPE is 'EX'")
-    current_spending = connection.execute(query_current_spending)
-    average_spending = current_spending.fetchone()[0]
-    difference_spending = current_spending-average_spending
-
-    return StreamingResponse(buf, media_type="image/png")
+@app.get("/get_spending_data")
+async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+    current_spending = load_monthly_sepnding(auth_get_use_id(credentials))[0][0]
+    if current_spending is None:
+        return {"message": "No spending data"}
+    else:
+        return {'this_month_spending': current_spending}
 
 
-@app.get("/graph2")
-async def get_graph2():
-    # Example data for the graph
+@app.get("/get_spending_analysis")
+async def get_graph2(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+    current_month_spending = load_monthly_sepnding(auth_get_use_id(credentials))[0][0]
+    user_id = auth_get_use_id(credentials)
+    if current_month_spending is None:
+        current_month_spending = 0
+    else:
+        current_month_spending = float(current_month_spending)
+    expected_spending = load_user_prediction(user_id)
+    upper_limit_expected_spending = float(expected_spending * 1.25)
+    max_limit_expected_spending = float(expected_spending * 1.5)
+    percent_of_spending = round(current_month_spending * 100/ expected_spending,1)
     data = {
-        "x": [1, 2, 3],
-        "y": [4, 5, 6]
+        'current_spending': current_month_spending,
+        'expected_spending': expected_spending,
+        'lower_bound_yellow_max': upper_limit_expected_spending,
+        'upper_bound_red_max': max_limit_expected_spending,
+        'percent_of_spending': f"{percent_of_spending}%"
     }
-    return JSONResponse(content=data)
-
-
-@app.post("/checkTransection")
-async def check_user():
-    qurrey = f"SELECT * FROM TRANSECTION WHERE USER_ID = {user_id}"
-    connector = Connector.Connector()
-
-    result = connector.execute()
-    return {'message': str(result)}
+    return data

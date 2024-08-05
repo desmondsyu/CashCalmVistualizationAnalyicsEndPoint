@@ -1,17 +1,12 @@
-import io
 from typing import Annotated
-
-import matplotlib.pyplot as plt
 from fastapi import FastAPI, Depends
-from fastapi.responses import StreamingResponse, JSONResponse
-from fastapi.security import HTTPBasicCredentials, HTTPBasic
+from fastapi.security import HTTPBasicCredentials
+import sys
+import os
+sys.path.append(os.path.expanduser(".."))
 
-import service.Connector as Connector
-import service.auth
 from service.auth import auth_username, security, auth_get_use_id
 from service.ModelbaseOnEachUser import load_user_prediction, load_monthly_sepnding
-import base64
-import datetime
 
 app = FastAPI(dependencies=[Depends(auth_username)])
 

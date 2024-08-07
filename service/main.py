@@ -6,7 +6,7 @@ import os
 sys.path.append(os.path.expanduser(".."))
 
 from service.auth import auth_username, security, auth_get_use_id
-from service.ModelbaseOnEachUser import load_user_prediction, load_monthly_sepnding
+from service.ModelbaseOnEachUser import load_user_prediction, load_monthly_spending
 
 app = FastAPI(dependencies=[Depends(auth_username)])
 
@@ -23,7 +23,7 @@ def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(secur
 
 @app.get("/get_spending_data")
 async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    current_spending = load_monthly_sepnding(auth_get_use_id(credentials))[0][0]
+    current_spending = load_monthly_spending(auth_get_use_id(credentials))[0][0]
     if current_spending is None:
         return {"message": "No spending data"}
     else:
@@ -32,7 +32,7 @@ async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends
 
 @app.get("/get_spending_analysis")
 async def get_graph2(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    current_month_spending = load_monthly_sepnding(auth_get_use_id(credentials))[0][0]
+    current_month_spending = load_monthly_spending(auth_get_use_id(credentials))[0][0]
     user_id = auth_get_use_id(credentials)
     if current_month_spending is None:
         current_month_spending = 0

@@ -33,8 +33,9 @@ def load_user_prediction(user_id: int):
             return results.sum()
     except HTTPException as err:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"error: {str(err)}")
-def load_monthly_sepnding(user_id: int):
 
+
+def load_monthly_spending(user_id: int):
     connection = CN.Connector()
     try:
         current_datetime = datetime.now()
@@ -45,13 +46,14 @@ def load_monthly_sepnding(user_id: int):
             end_of_month = start_of_month.replace(month=current_datetime.month + 1)
 
         # Define query for the current month spending
-        query_current_spending = (
-            f"SELECT SUM(AMOUNT) FROM transaction "
-            f"WHERE user_id = '{user_id}' "
-            f"AND transaction_date >= '{start_of_month}' "
-            f"AND transaction_date < '{end_of_month}' "
-            f"AND TYPE_ID = 2"
-        )
+
+        query_current_spending = (f"SELECT SUM(AMOUNT) FROM transaction "
+                                  f"WHERE user_id = '{user_id}' "
+                                  f"AND transaction_date >= '{start_of_month}' "
+                                  f"AND transaction_date < '{end_of_month}' "
+                                  f" AND tran_group_id IN (SELECT tran_group_id "
+                                  f"FROM transaction_group "
+                                  f"WHERE type_id = 2)")
 
         current_spending = connection.execute(query_current_spending)
         return current_spending

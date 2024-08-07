@@ -6,6 +6,12 @@ from datetime import datetime
 
 model = joblib.load("service/Model/expense_forcasting_model.pkl")
 
+def calculate_age(dob):
+    today = datetime.today()
+    age = today.year - dob.year
+    if (today.month, today.day) < (dob.month, dob.day):
+        age -= 1
+    return age
 
 def load_user_prediction(user_id: int):
     connection = CN.Connector()
@@ -19,14 +25,15 @@ def load_user_prediction(user_id: int):
         else:
             user = result[0][0]
             dob = result[0][1]
+            age = calculate_age(dob)
             gender = result[0][2]
             data = {
-                'Gender': ['M', 'M', 'M', 'M', 'M', 'M'],
+                'Gender': [gender,gender,gender,gender,gender,gender],
                 'Month': [datetime.today().month, datetime.today().month, datetime.today().month,
                           datetime.today().month, datetime.today().month,
                           datetime.today().month],
                 'Category': ['Cosmetic', 'Travel', 'Clothing', 'Electronics', 'Restaurant', 'Market'],
-                'Age': [34, 34, 34, 34, 34, 34]
+                'Age': [age, age, age, age, age, age]
             }
             df = pd.DataFrame(data)
             results = model.predict(df)

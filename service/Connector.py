@@ -1,5 +1,7 @@
-import mysql.connector
+
 import json
+
+import mysql.connector
 from fastapi import HTTPException, status
 
 class Connector:
@@ -27,7 +29,8 @@ class Connector:
                     host=self.host,
                     user=self.user,
                     password=self.password,
-                    database=self.database
+                    database=self.database,
+                    auth_plugin='mysql_native_password'
                 )
         except mysql.connector.Error as err:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Database connection error: {str(err)}")

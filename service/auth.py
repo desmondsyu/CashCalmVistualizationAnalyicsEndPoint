@@ -19,7 +19,7 @@ def auth_username(
 ):
     current_username = credentials.username
     current_password_sha256 = hash_password(credentials.password)
-    query = f"SELECT username from user WHERE username = {current_username} and PASSWORD = '{current_password_sha256}'"
+    query = f"SELECT user_id from user WHERE username = '{current_username}' and PASSWORD = '{current_password_sha256}'"
     connector = Connector.Connector()
     result = connector.execute(query)
 

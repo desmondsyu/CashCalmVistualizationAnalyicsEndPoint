@@ -17,9 +17,9 @@ security = HTTPBasic()
 def auth_username(
         credentials: Annotated[HTTPBasicCredentials, Depends(security)],
 ):
-    current_username = credentials.username
+    current_email = credentials.username
     current_password_sha256 = hash_password(credentials.password)
-    query = f"SELECT user_id from user WHERE username = '{current_username}' and PASSWORD = '{current_password_sha256}'"
+    query = f"SELECT user_id from user WHERE email = '{current_email}' and PASSWORD = '{current_password_sha256}'"
     connector = Connector.Connector()
     result = connector.execute(query)
 
@@ -31,11 +31,11 @@ def auth_username(
         )
 
 
-def auth_get_use_id(credentials: Annotated[HTTPBasicCredentials, Depends(security)],):
-    uname = credentials.username
+def auth_get_username_id(credentials: Annotated[HTTPBasicCredentials, Depends(security)],):
+    email = credentials.username
     pw = hash_password(credentials.password)
 
-    query = f"SELECT user_id FROM user WHERE username = '{uname}' and password = '{pw}'"
+    query = f"SELECT user_id,username FROM user WHERE email = '{email}' and password = '{pw}'"
 
     connection = Connector.Connector()
     result = connection.execute(query)
@@ -46,4 +46,4 @@ def auth_get_use_id(credentials: Annotated[HTTPBasicCredentials, Depends(securit
         )
 
     else:
-        return result[0][0]
+        return result

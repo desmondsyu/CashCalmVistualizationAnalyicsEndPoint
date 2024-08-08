@@ -1,8 +1,10 @@
 from typing import Annotated
 from fastapi import FastAPI, Depends
 from fastapi.security import HTTPBasicCredentials
+from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
+
 sys.path.append(os.path.expanduser(".."))
 
 from service.auth import auth_username, security, auth_get_username_id
@@ -10,16 +12,30 @@ from service.ModelbaseOnEachUser import load_user_prediction, load_monthly_spend
 
 app = FastAPI(dependencies=[Depends(auth_username)])
 
+# Configure CORS settings
+origins = [
+    "http://localhost:3000"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+)
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
-
 @app.get("/users/me")
 def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    return {"username":auth_get_username_id(credentials)[0][1],"email": credentials.username, "password": credentials.password}
-
+    return {
+        "username": auth_get_username_id(credentials)[0][1],
+        "email": credentials.username,
+        "password": credentials.password
+    }
 
 @app.get("/get_spending_data")
 async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
@@ -28,7 +44,6 @@ async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends
         return {"message": "No spending data"}
     else:
         return {'this_month_spending': current_spending}
-
 
 @app.get("/get_spending_analysis")
 async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
@@ -41,7 +56,7 @@ async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Dep
     expected_spending = load_user_prediction(user_id)
     upper_limit_expected_spending = float(expected_spending * 1.25)
     max_limit_expected_spending = float(expected_spending * 1.5)
-    percent_of_spending = round(current_month_spending * 100/ expected_spending,1)
+    percent_of_spending = round(current_month_spending * 100 / expected_spending, 1)
     data = {
         'current_spending': current_month_spending,
         'expected_spending': expected_spending,

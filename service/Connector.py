@@ -1,11 +1,11 @@
-
 import json
 
 import mysql.connector
 from fastapi import HTTPException, status
 
+
 class Connector:
-    def __init__(self, config_path='.connection.json'):
+    def __init__(self, config_path='example.connection.json'):
         self._load_config(config_path)
         self.con = None
 
@@ -18,9 +18,11 @@ class Connector:
                 self.user = config['database']['user']
                 self.password = config['database']['password']
         except FileNotFoundError:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Configuration file not found")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Configuration file not found")
         except json.JSONDecodeError:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Invalid configuration file format")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Invalid configuration file format")
 
     def _connect(self):
         try:
@@ -33,7 +35,8 @@ class Connector:
                     auth_plugin='mysql_native_password'
                 )
         except mysql.connector.Error as err:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Database connection error: {str(err)}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"Database connection error: {str(err)}")
 
     def disconnect(self):
         if self.con is not None and self.con.is_connected():
@@ -58,4 +61,3 @@ class Connector:
         finally:
             cur.close()
             self.disconnect()
-

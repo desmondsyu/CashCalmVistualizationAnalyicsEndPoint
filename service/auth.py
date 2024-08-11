@@ -31,7 +31,7 @@ def auth_username(
         )
 
 
-def auth_get_username_id(credentials: Annotated[HTTPBasicCredentials, Depends(security)],):
+def auth_get_username_id(credentials: Annotated[HTTPBasicCredentials, Depends(security)], ):
     email = credentials.username
     pw = hash_password(credentials.password)
 

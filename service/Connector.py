@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 
 
 class Connector:
-    def __init__(self, config_path='example.connection.json'):
+    def __init__(self, config_path='.connection.json'):
         self._load_config(config_path)
         self.con = None
 
@@ -51,7 +51,7 @@ class Connector:
 
             if sql.strip().upper().startswith("SELECT"):
                 result = cur.fetchall()
-                return result if result else None
+                return result if result else 0
             else:
                 self.con.commit()
                 return cur.rowcount

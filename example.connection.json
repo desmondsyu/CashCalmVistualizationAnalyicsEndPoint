@@ -1,0 +1,8 @@
+{
+  "database": {
+    "hostname": "107.20.240.135",
+    "database": "financial_system",
+    "user": "developer",
+    "password": "developer"
+  }
+}

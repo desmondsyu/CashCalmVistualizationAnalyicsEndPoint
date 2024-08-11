@@ -1,0 +1,6 @@
+.connection.json
+.idea/dataSources.local.xml
+service/Model/
+service/RecordSearching.py
+service/__pycache__/
+service/Model/expense_forcasting_model.pkl

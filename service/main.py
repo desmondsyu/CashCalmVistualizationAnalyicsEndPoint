@@ -45,10 +45,7 @@ def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(secur
     data_encoded = json.dumps(
         Class.USER_INFO(username=auth_get_username_id(credentials)[0][1], email=credentials.username,
                         password=credentials.password))
-    response = Response(data_encoded)
-    response.headers['Content-Type'] = 'application/json'
-    response.headers['Cache-Control'] = 'private, max-age=3600'
-    return response
+    return data_encoded
 
 
 @app.get("/get-spending-analysis", response_model=Class.SPENDING_ANALYSIS)

@@ -4,7 +4,7 @@ import joblib
 import service.Connector as CN
 from datetime import datetime
 
-model = joblib.load("service/Model/expense_forcasting_model.pkl")
+model = joblib.load("./Model/expense_forcasting_model.pkl")
 
 
 def calculate_age(dob):

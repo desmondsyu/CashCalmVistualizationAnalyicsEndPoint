@@ -52,7 +52,7 @@ def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(secur
 
 
 @app.get("/get-spending-analysis", response_model=Class.SPENDING_ANALYSIS)
-async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Depends(security)], data_encoded=None):
     current_month_spending = \
         RecordSearching.load_monthly_spending_or_income(auth_get_username_id(credentials)[0][0], datetime.today())[0]
 
@@ -67,8 +67,10 @@ async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Dep
         upper_bound_yellow_max=expected_spending * 1.25,
         max_bound_red_max=expected_spending * 1.5,
         percent_of_spending=round(current_month_spending / expected_spending, 1))
-    data_encoded = jsonable_encoder(data)
-    return data_encoded
+    data = [item.model_dump() for item in data]
+    data_encoded = json.dumps(data)
+    response = Response(data_encoded, media_type='application/json')
+    return response
 
 
 @app.get("/get-spending-data-in-range", response_model=list[Class.MONTH_SPENDING_INCOME])
@@ -93,11 +95,15 @@ async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends
 
 @app.get("/get-spending-break-down-in-one-month", response_model=list[Class.GROUP_SPENDING_IN_MONTH])
 async def get_group_breakdown_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)], month: int,
-                                   year: int):
-    Group_list = \
+                                   year: int, return_in_type: bool ):
+    group_data = \
         RecordSearching.month_break_down_in_group(user_id=auth_get_username_id(credentials)[0][0], year=year,
-                                                  month=month)
-    data_encoded = jsonable_encoder(Group_list)
+                                                  month=month,in_type=return_in_type)
+    if return_in_type:
+        data = {"Income":[item.model_dump() for item in group_data[0]],"Expense":[item.model_dump() for item in group_data[1]]}
+    else:
+        data = [item.model_dump() for item in group_data]
+    data_encoded = json.dumps(data)
     response = Response(content=data_encoded, media_type="application/json")
-    response.headers['Cache-Control'] = 'private, max-age=3600'
     return response
+# @app.get("/get-spending-break-down-in-past-three-month", response_model=list[Class.GROUP_SPENDING_IN_MONTH])

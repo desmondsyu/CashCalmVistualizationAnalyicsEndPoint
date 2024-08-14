@@ -71,14 +71,6 @@ async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Dep
     return data_encoded
 
 
-# @app.get("/get-spending-break-down-in-one-month",response_model=list[Class.GROUP_AMOUNT])
-# async def get_group_breakdown_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)],Income: bool):
-#     current_spending = RecordSearching.load_monthly_spending(auth_get_username_id(credentials)[0][0],datetime.today())[0][0]
-#     data = Class.MONTH_SPENDING(year = datetime.today().year, )
-#     data_encoded = jsonable_encoder(data)
-#     return data_encoded
-
-
 @app.get("/get-spending-data-in-range", response_model=list[Class.MONTH_SPENDING_INCOME])
 async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
                             from_year: int, from_month: int, to_year: int, to_month: int,
@@ -91,9 +83,21 @@ async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends
                                (auth_get_username_id(credentials)[0][0], month))
         date_str = str(month.year) + '/' + str(month.month)
         result = Class.MONTH_SPENDING_INCOME(date=date_str, month_spending=spending_and_income[0]
-                                      , month_income=spending_and_income[1] * -1)
+                                             , month_income=spending_and_income[1] * -1)
         data.append(result.model_dump())
     data_encoded = json.dumps(data)
+    response = Response(content=data_encoded, media_type="application/json")
+    response.headers['Cache-Control'] = 'private, max-age=3600'
+    return response
+
+
+@app.get("/get-spending-break-down-in-one-month", response_model=list[Class.GROUP_SPENDING_IN_MONTH])
+async def get_group_breakdown_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)], month: int,
+                                   year: int):
+    Group_list = \
+        RecordSearching.month_break_down_in_group(user_id=auth_get_username_id(credentials)[0][0], year=year,
+                                                  month=month)
+    data_encoded = jsonable_encoder(Group_list)
     response = Response(content=data_encoded, media_type="application/json")
     response.headers['Cache-Control'] = 'private, max-age=3600'
     return response

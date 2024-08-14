@@ -16,6 +16,11 @@ class MONTH_SPENDING_INCOME(BaseModel):
     month_income: float
 
 
+class GROUP_SPENDING_IN_MONTH(BaseModel):
+    group_name: str
+    amount: float
+
+
 class SPENDING_ANALYSIS(BaseModel):
     current_spending: float
     expected_spending: float

@@ -44,6 +44,5 @@ def auth_get_username_id(credentials: Annotated[HTTPBasicCredentials, Depends(se
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="User not found"
         )
-
     else:
         return result

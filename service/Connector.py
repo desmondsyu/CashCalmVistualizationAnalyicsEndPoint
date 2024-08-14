@@ -51,7 +51,7 @@ class Connector:
 
             if sql.strip().upper().startswith("SELECT"):
                 result = cur.fetchall()
-                return result if result else 0
+                return result
             else:
                 self.con.commit()
                 return cur.rowcount

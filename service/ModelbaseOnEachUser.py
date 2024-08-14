@@ -4,7 +4,7 @@ import joblib
 import service.Connector as CN
 from datetime import datetime
 
-model = joblib.load("./Model/expense_forcasting_model.pkl")
+model = joblib.load("service/Model/expense_forcasting_model.pkl")
 
 
 def calculate_age(dob):
@@ -21,16 +21,24 @@ def load_user_prediction(user_id: int):
     try:
         query = f"SELECT username,dob,Gender FROM user WHERE user_id={user_id}"
         result = connection.execute(query)
-        if result is None or result == []:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail=f"user id Not Found:{str(user_id)}")
+        user, dob, gender = result[0]
+
+        missing_attributes = []
+
+        if dob is None:
+            missing_attributes.append('dob')
+        if gender is None:
+            missing_attributes.append('Gender')
+
+        if missing_attributes:
+            missing_attrs_str = ', '.join(missing_attributes)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail=f"User {user} does not have complete information: {missing_attrs_str}")
+
         else:
-            user = result[0][0]
-            dob = result[0][1]
             age = calculate_age(dob)
-            gender = result[0][2]
             categories = ['Cosmetic', 'Travel', 'Clothing', 'Electronics', 'Restaurant', 'Market']
-            current_month = datetime.today().month
+            current_month = today.month
             data = {
                 'Gender': [gender] * len(categories),
                 'Month': [current_month] * len(categories),

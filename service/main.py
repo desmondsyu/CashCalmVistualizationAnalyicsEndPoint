@@ -42,9 +42,8 @@ async def root():
 
 @app.get("/users/me", response_model=Class.USER_INFO)
 def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    data_encoded = json.dumps(
-        Class.USER_INFO(username=auth_get_username_id(credentials)[0][1], email=credentials.username,
-                        password=credentials.password))
+    data_encoded = Class.USER_INFO(username=auth_get_username_id(credentials)[0][1], email=credentials.username,password
+    =credentials.password).model_dump()
     return data_encoded
 
 

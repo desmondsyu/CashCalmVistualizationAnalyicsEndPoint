@@ -1,10 +1,10 @@
-from typing import Type, List, Tuple
+from datetime import datetime
 
 from fastapi import HTTPException, status
-import service.Connector as CN
-from datetime import datetime
-import service.Class as Class
-from service.Class import GROUP_SPENDING_IN_MONTH
+
+import service.Interfaces as Class
+import service.connector as cn
+from service.Interfaces import GROUP_SPENDING_IN_MONTH
 
 
 def covert_date(date: datetime) -> tuple[datetime, datetime]:
@@ -38,13 +38,13 @@ def moth_in_list_in_range(from_year: int, from_month: int, to_year, to_month: in
 
 
 def load_monthly_spending_or_income(user_id: int, search_datetime: datetime) -> list:
-    connection = CN.Connector()
+    connection = cn.Connector()
     try:
         start_of_month, end_of_month = covert_date(search_datetime)
         query = (
             f"SELECT "
-            f"SUM(CASE WHEN tg.type_id = 1 THEN t.AMOUNT ELSE 0 END) AS sum_amount_Income, "
-            f"SUM(CASE WHEN tg.type_id = 2 THEN t.AMOUNT ELSE 0 END) AS sum_amount_Expense "
+            f"SUM(IF(tg.type_id = 1, t.AMOUNT, 0)) AS sum_amount_Income, "
+            f"SUM(IF(tg.type_id = 2, t.AMOUNT, 0)) AS sum_amount_Expense "
             f"FROM transaction t "
             f"JOIN transaction_group tg ON t.tran_group_id = tg.id "
             f"WHERE t.user_id = '{user_id}' "
@@ -80,7 +80,7 @@ def month_break_down_in_group(year: int, month: int, user_id: int, in_type: bool
             AND t.user_id = '%s'
             GROUP BY tg.name
         """
-        connection = CN.Connector()
+        connection = cn.Connector()
         result = connection.execute(query, (start_of_month, end_of_month, user_id))
         data_Income = []
         data_Expense = []

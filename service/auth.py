@@ -2,7 +2,7 @@ import hashlib
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-import service.Connector as Connector
+import service.connector as Connector
 
 
 # Hash password function

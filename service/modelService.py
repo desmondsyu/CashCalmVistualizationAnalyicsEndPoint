@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 import pandas as pd
 import joblib
-import service.Connector as CN
+import service.connector as CN
 from datetime import datetime
 
 model = joblib.load("service/Model/expense_forcasting_model.pkl")

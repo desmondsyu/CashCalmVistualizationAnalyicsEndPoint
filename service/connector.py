@@ -1,5 +1,4 @@
 import json
-
 import mysql.connector
 from fastapi import HTTPException, status
 

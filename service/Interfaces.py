@@ -1,6 +1,4 @@
-import decimal
-from enum import Enum
-from fastapi import FastAPI
+
 from pydantic import BaseModel
 
 
@@ -28,3 +26,5 @@ class SPENDING_ANALYSIS(BaseModel):
     upper_bound_yellow_max: float
     max_bound_red_max: float
     percent_of_spending: float
+class MESSAGE(BaseModel):
+    message: str

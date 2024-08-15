@@ -42,15 +42,17 @@ async def root():
 
 @app.get("/users/me", response_model=Class.USER_INFO)
 def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    data_encoded = Class.USER_INFO(username=auth_get_username_id(credentials)[0][1], email=credentials.username,password
-    =credentials.password).model_dump()
+    data_encoded = Class.USER_INFO(username=auth_get_username_id(credentials)[0][1], email=credentials.username,
+                                   password
+                                   =credentials.password).model_dump()
     return data_encoded
 
 
 @app.get("/spending/analysis", response_model=Class.SPENDING_ANALYSIS)
 async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
     current_month_spending = \
-        RecordSearching.load_monthly_spending_or_income(auth_get_username_id(credentials)[0][0], datetime.today(),)[0][1]
+        RecordSearching.load_monthly_spending_or_income(auth_get_username_id(credentials)[0][0], datetime.today(), )[0][
+            1]
 
     user_id = auth_get_username_id(credentials)[0][0]
     if current_month_spending is None:
@@ -66,8 +68,8 @@ async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Dep
     return data
 
 
-@app.get("/spending/data-in-range", response_model=list[Class.MONTH_SPENDING_INCOME])
-async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
+@app.get("/spending/income-expense/in-range", response_model=list[Class.MONTH_SPENDING_INCOME])
+async def get_trend_data_income_and_expense(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
                             from_year: int, from_month: int, to_year: int, to_month: int,
                             ):
     month_list = RecordSearching.moth_in_list_in_range(from_year, from_month, to_year, to_month)
@@ -79,29 +81,65 @@ async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends
         spending = spending_and_income[0][0] if spending_and_income[0][0] is not None else 0.0
         income = spending_and_income[0][1] if spending_and_income[0][1] is not None else 0.0
         result = Class.MONTH_SPENDING_INCOME(date=date_str, month_spending=spending
-                                             , month_income=income* -1)
+                                             , month_income=income * -1)
         data.append(result.model_dump())
     data_encoded = json.dumps(data)
     response = Response(content=data_encoded, media_type="application/json")
-    response.headers['Cache-Control'] = 'private, max-age=3600'
+    response.headers['Cache-Control'] = 'private, max-age=20'
     return response
 
 
-@app.get("/spending/break-down/in-month", response_model=list[Class.GROUP_SPENDING_IN_MONTH])
+@app.get("/spending/break-down/in-month/transection-group", response_model=list[Class.GROUP_SPENDING])
 async def get_group_breakdown_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)], month: int,
-                                   year: int, return_in_type: bool ):
+                                   year: int, return_in_type: bool):
     group_data = \
         RecordSearching.month_break_down_in_group(user_id=auth_get_username_id(credentials)[0][0], year=year,
-                                                  month=month,in_type=return_in_type)
+                                                  month=month, in_type=return_in_type)
     if return_in_type:
-        data = {"Income":[item.model_dump() for item in group_data[0]],"Expense":[item.model_dump() for item in group_data[1]]}
+        data = {"Income": [item.model_dump() for item in group_data[0]],
+                "Expense": [item.model_dump() for item in group_data[1]]}
     else:
         data = [item.model_dump() for item in group_data]
     data_encoded = json.dumps(data)
     response = Response(content=data_encoded, media_type="application/json")
     return response
 
-# @app.get("/get-spending-break-down-in-range", response_model=list[Class.])
-# async def get_spending_data(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
-#                             from_year: int, from_month: int, to_year: int, to_month: int,
-#     ):
+
+@app.get("/spending/transaction-group/in-range", response_model=list[Class.GROUP_SPENDING])
+async def get_breakdown_trend_data_in_group(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
+                                   from_year: int, from_month: int, to_year: int, to_month: int):
+    month_list = RecordSearching.moth_in_list_in_range(from_year, from_month, to_year, to_month)
+    data = list()
+    for month in month_list:
+        month_data = RecordSearching.month_break_down_in_group(year=month.year, month=month.month,
+                                                               user_id=auth_get_username_id(credentials)[0][0],
+                                                               in_type=False)
+        month_data_encoded = {f'{month.year}/{month.month}':[item.model_dump() for item in month_data]}
+        data.append(month_data_encoded)
+    data_encoded = json.dumps(data)
+    response = Response(content=data_encoded, media_type="application/json")
+    response.headers['Cache-Control'] = 'private, max-age=20'
+    return response
+
+@app.get("/spending/lable_id/in-range",response_model=list[Class.LABEL_SPENDING])
+async def get_breakdown_trend_data_in_label(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
+                                   from_year: int, from_month: int, to_year: int, to_month: int):
+    month_list = RecordSearching.moth_in_list_in_range(from_year, from_month, to_year, to_month)
+    data = list()
+    for month in month_list:
+        month_data = RecordSearching.month_breakdown_in_label(year=month.year, month=month.month,
+                                                               user_id=auth_get_username_id(credentials)[0][0],
+                                                              historical=False)
+        month_data_encoded = {f'{month.year}/{month.month}':[item.model_dump() for item in month_data]}
+        data.append(month_data_encoded)
+    data_encoded = json.dumps(data)
+    response = Response(content=data_encoded, media_type="application/json")
+    response.headers['Cache-Control'] = 'private, max-age=20'
+    return response
+
+
+@app.get("/spending/break-down/label/in-transaction-group",response_model=list[Class.GROUP_SPENDING])
+async def get_group_spending_in_label(credentials: Annotated[HTTPBasicCredentials, Depends(security)],label_id: int):
+    data = RecordSearching.label_break_down(auth_get_username_id(credentials)[0][0],label_id)
+    data_encoded = [item.model_dump() for item in data]
+    return data_encoded

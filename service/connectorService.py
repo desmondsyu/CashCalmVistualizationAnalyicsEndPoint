@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 
 import service.Interfaces as Class
 import service.connector as cn
-from service.Interfaces import GROUP_SPENDING_IN_MONTH
+from service.Interfaces import *
 
 
 def covert_date(date: datetime) -> tuple[datetime, datetime]:
@@ -59,10 +59,10 @@ def load_monthly_spending_or_income(user_id: int, search_datetime: datetime) -> 
                             detail=f"{e}")
 
 
-def month_break_down_in_group(year: int, month: int, user_id: int, in_type: bool) -> list[GROUP_SPENDING_IN_MONTH] | \
+def month_break_down_in_group(year: int, month: int, user_id: int, in_type: bool) -> list[GROUP_SPENDING] | \
                                                                                      tuple[
-                                                                                         list[GROUP_SPENDING_IN_MONTH],
-                                                                                         list[GROUP_SPENDING_IN_MONTH]]:
+                                                                                         list[GROUP_SPENDING],
+                                                                                         list[GROUP_SPENDING]]:
     global group_spending, data_Income, data, data_Expense
     if month not in range(1, 13):
         raise HTTPException(status_code=400, detail="Invalid month. Month should be between 1 and 12.")
@@ -106,3 +106,58 @@ def month_break_down_in_group(year: int, month: int, user_id: int, in_type: bool
             return data_Income + data_Expense
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+def month_breakdown_in_label(year: int, month: int, user_id: int, historical: bool) -> list[LABEL_SPENDING]:
+    if month not in range(1, 13):
+        raise HTTPException(status_code=400, detail="Invalid month. Month should be between 1 and 12.")
+    try:
+        data = list()
+        start_date = datetime(year=year, month=month, day=1)
+        start_of_month, end_of_month = covert_date(start_date)
+        query = f"""
+            SELECT l.name AS Label_Name, SUM(t.amount) AS Amount
+            FROM transaction t
+            JOIN financial_system.label l ON t.label_id = l.id
+            WHERE t.transaction_date < %s
+            AND t.user_id = {user_id}
+        """
+
+        params = [end_of_month]
+
+        if not historical:
+            query += "AND t.transaction_date >= %s "
+            params.append(start_of_month)
+
+        query += "GROUP BY l.name"
+        connection = cn.Connector()
+        result = connection.execute(query, params)
+
+        for row in result:
+            label_spending = Class.LABEL_SPENDING(
+                label_name=row[0],
+                amount=float(row[1])
+            )
+            data.append(label_spending)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+def label_break_down(user_id: int, label_id: int) -> list[GROUP_SPENDING]:
+    data = []
+    query = f"""
+         SELECT tg.name AS GroupName, SUM(t.amount) AS Amount
+         FROM transaction t
+         JOIN financial_system.transaction_group tg
+         ON t.tran_group_id = tg.id
+         AND t.user_id = {user_id}
+         AND t.label_id = {label_id}
+         GROUP BY tg.name
+     """
+    connection = cn.Connector()
+    result = connection.execute(query)
+    for row in result:
+        group_spending = Class.GROUP_SPENDING(group_name=row[0], amount=float(row[1]),type="Income" if row[1] > 0 else "Expense")
+        data.append(group_spending)
+    return data

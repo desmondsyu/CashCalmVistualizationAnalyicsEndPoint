@@ -14,11 +14,13 @@ class MONTH_SPENDING_INCOME(BaseModel):
     month_income: float
 
 
-class GROUP_SPENDING_IN_MONTH(BaseModel):
+class GROUP_SPENDING(BaseModel):
     group_name: str
     amount: float
     type: str
-
+class LABEL_SPENDING(BaseModel):
+    label_name: str
+    amount: float
 
 class SPENDING_ANALYSIS(BaseModel):
     current_spending: float
@@ -28,3 +30,4 @@ class SPENDING_ANALYSIS(BaseModel):
     percent_of_spending: float
 class MESSAGE(BaseModel):
     message: str
+

@@ -61,10 +61,10 @@ async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Dep
 
     data = Class.SPENDING_ANALYSIS(
         current_spending=float(current_month_spending)*-1,
-        expected_spending=expected_spending,
-        upper_bound_yellow_max=expected_spending * 1.25,
-        max_bound_red_max=expected_spending * 1.5,
-        percent_of_spending=round(float(current_month_spending)/ expected_spending, 1))
+        expected_spending=round(expected_spending,2),
+        upper_bound_yellow_max=round((expected_spending * 1.25),2),
+        max_bound_red_max=round((expected_spending * 1.5),2),
+        percent_of_spending=round(float(current_month_spending)*-100/ expected_spending, 2))
     return data
 
 

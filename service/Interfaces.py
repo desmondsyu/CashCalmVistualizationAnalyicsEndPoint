@@ -15,10 +15,12 @@ class MONTH_SPENDING_INCOME(BaseModel):
 
 
 class GROUP_SPENDING(BaseModel):
+    date : str
     group_name: str
     amount: float
     type: str
 class LABEL_SPENDING(BaseModel):
+    date: str
     label_name: str
     amount: float
 

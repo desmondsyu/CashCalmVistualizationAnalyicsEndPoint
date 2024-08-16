@@ -70,8 +70,8 @@ async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Dep
 
 @app.get("/spending/income-expense/in-range", response_model=list[Class.MONTH_SPENDING_INCOME])
 async def get_trend_data_income_and_expense(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
-                            from_year: int, from_month: int, to_year: int, to_month: int,
-                            ):
+                                            from_year: int, from_month: int, to_year: int, to_month: int,
+                                            ):
     month_list = RecordSearching.moth_in_list_in_range(from_year, from_month, to_year, to_month)
     data = list()
     for month in month_list:
@@ -107,39 +107,40 @@ async def get_group_breakdown_data(credentials: Annotated[HTTPBasicCredentials, 
 
 @app.get("/spending/transaction-group/in-range", response_model=list[Class.GROUP_SPENDING])
 async def get_breakdown_trend_data_in_group(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
-                                   from_year: int, from_month: int, to_year: int, to_month: int):
+                                            from_year: int, from_month: int, to_year: int, to_month: int):
     month_list = RecordSearching.moth_in_list_in_range(from_year, from_month, to_year, to_month)
     data = list()
     for month in month_list:
         month_data = RecordSearching.month_break_down_in_group(year=month.year, month=month.month,
                                                                user_id=auth_get_username_id(credentials)[0][0],
                                                                in_type=False)
-        month_data_encoded = {f'{month.year}/{month.month}':[item.model_dump() for item in month_data]}
-        data.append(month_data_encoded)
+        month_data_encoded = [item.model_dump() for item in month_data]
+        data.extend(month_data_encoded)
     data_encoded = json.dumps(data)
     response = Response(content=data_encoded, media_type="application/json")
     response.headers['Cache-Control'] = 'private, max-age=20'
     return response
 
-@app.get("/spending/lable/in-range",response_model=list[Class.LABEL_SPENDING])
+
+@app.get("/spending/lable/in-range", response_model=list[Class.LABEL_SPENDING])
 async def get_breakdown_trend_data_in_label(credentials: Annotated[HTTPBasicCredentials, Depends(security)],
-                                   from_year: int, from_month: int, to_year: int, to_month: int):
+                                            from_year: int, from_month: int, to_year: int, to_month: int):
     month_list = RecordSearching.moth_in_list_in_range(from_year, from_month, to_year, to_month)
     data = list()
     for month in month_list:
         month_data = RecordSearching.month_breakdown_in_label(year=month.year, month=month.month,
-                                                               user_id=auth_get_username_id(credentials)[0][0],
+                                                              user_id=auth_get_username_id(credentials)[0][0],
                                                               historical=False)
-        month_data_encoded = {f'{month.year}/{month.month}':[item.model_dump() for item in month_data]}
-        data.append(month_data_encoded)
+        month_data_encoded = [item.model_dump() for item in month_data]
+        data.extend(month_data_encoded)
     data_encoded = json.dumps(data)
     response = Response(content=data_encoded, media_type="application/json")
     response.headers['Cache-Control'] = 'private, max-age=20'
     return response
 
 
-@app.get("/spending/label/in-transaction-group",response_model=list[Class.GROUP_SPENDING])
-async def get_group_spending_in_label(credentials: Annotated[HTTPBasicCredentials, Depends(security)],label_id: int):
-    data = RecordSearching.label_break_down(auth_get_username_id(credentials)[0][0],label_id)
+@app.get("/spending/label/in-transaction-group", response_model=list[Class.GROUP_SPENDING])
+async def get_group_spending_in_label(credentials: Annotated[HTTPBasicCredentials, Depends(security)], label_id: int):
+    data = RecordSearching.label_break_down(auth_get_username_id(credentials)[0][0], label_id)
     data_encoded = [item.model_dump() for item in data]
     return data_encoded

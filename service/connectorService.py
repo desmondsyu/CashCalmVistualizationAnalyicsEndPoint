@@ -86,7 +86,8 @@ def month_break_down_in_group(year: int, month: int, user_id: int, in_type: bool
         data_Expense = []
         for row in result:
             if float(row[1]) < 0:
-                group_spending = Class.GROUP_SPENDING_IN_MONTH(
+                group_spending = Class.GROUP_SPENDING(
+                    date=f"{start_date.year}/{start_of_month.month}",
                     group_name=row[0],
                     amount=float(row[1]) * -1,
                     type="Expense"
@@ -94,7 +95,8 @@ def month_break_down_in_group(year: int, month: int, user_id: int, in_type: bool
                 data_Expense.append(group_spending)
                 continue
             else:
-                group_spending = Class.GROUP_SPENDING_IN_MONTH(
+                group_spending = Class.GROUP_SPENDING(
+                    date=f"{start_date.year}/{start_of_month.month}",
                     group_name=row[0],
                     amount=float(row[1]),
                     type="Income"
@@ -136,7 +138,8 @@ def month_breakdown_in_label(year: int, month: int, user_id: int, historical: bo
         for row in result:
             label_spending = Class.LABEL_SPENDING(
                 label_name=row[0],
-                amount=float(row[1])
+                amount=float(row[1]),
+                date=f"{start_date.year}/{start_of_month.month}",
             )
             data.append(label_spending)
         return data
@@ -158,6 +161,9 @@ def label_break_down(user_id: int, label_id: int) -> list[GROUP_SPENDING]:
     connection = cn.Connector()
     result = connection.execute(query)
     for row in result:
-        group_spending = Class.GROUP_SPENDING(group_name=row[0], amount=float(row[1]),type="Income" if row[1] > 0 else "Expense")
+        group_spending = Class.GROUP_SPENDING(group_name=row[0],
+                                              amount=float(row[1]),
+                                              type="Income" if row[1] > 0 else "Expense",
+                                              date=f"{datetime.today().year}/{datetime.today().month}")
         data.append(group_spending)
     return data

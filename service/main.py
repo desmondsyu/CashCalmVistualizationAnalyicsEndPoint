@@ -51,8 +51,8 @@ def read_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(secur
 @app.get("/spending/analysis", response_model=Class.SPENDING_ANALYSIS)
 async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
     current_month_spending = \
-        RecordSearching.load_monthly_spending_or_income(auth_get_username_id(credentials)[0][0], datetime.today(), )[0][
-            1]
+        RecordSearching.load_monthly_spending_or_income(auth_get_username_id(credentials)[0][0],
+                                                        datetime.today())[0][1]
 
     user_id = auth_get_username_id(credentials)[0][0]
     if current_month_spending is None:
@@ -60,11 +60,11 @@ async def get_spending_analysis(credentials: Annotated[HTTPBasicCredentials, Dep
     expected_spending = float(load_user_prediction(user_id))
 
     data = Class.SPENDING_ANALYSIS(
-        current_spending=current_month_spending,
+        current_spending=float(current_month_spending)*-1,
         expected_spending=expected_spending,
         upper_bound_yellow_max=expected_spending * 1.25,
         max_bound_red_max=expected_spending * 1.5,
-        percent_of_spending=round(current_month_spending / expected_spending, 1))
+        percent_of_spending=round(float(current_month_spending)/ expected_spending, 1))
     return data
 
 

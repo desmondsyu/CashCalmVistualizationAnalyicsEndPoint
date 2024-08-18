@@ -78,10 +78,10 @@ async def get_trend_data_income_and_expense(credentials: Annotated[HTTPBasicCred
         spending_and_income = (RecordSearching.load_monthly_spending_or_income
                                (auth_get_username_id(credentials)[0][0], month))
         date_str = f"{month.year}/{month.month}"
-        spending = spending_and_income[0][0] if spending_and_income[0][0] is not None else 0.0
-        income = spending_and_income[0][1] if spending_and_income[0][1] is not None else 0.0
-        result = Class.MONTH_SPENDING_INCOME(date=date_str, month_spending=spending
-                                             , month_income=income * -1)
+        income = spending_and_income[0][0] if spending_and_income[0][0] is not None else 0.0
+        expense = spending_and_income[0][1] if spending_and_income[0][1] is not None else 0.0
+        result = Class.MONTH_SPENDING_INCOME(date=date_str, month_income=income
+                                             , month_spending=expense * -1)
         data.append(result.model_dump())
     data_encoded = json.dumps(data)
     response = Response(content=data_encoded, media_type="application/json")
